@@ -1,0 +1,48 @@
+﻿@model IEnumerable<LordOfTheWings.DAL.Models.Reservation>
+
+@{
+    ViewData["Title"] = "Reservations";
+}
+
+<h1>Index</h1>
+
+<p>
+    <h1></h1>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.TableNumber)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ReservedBy)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ReservationDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ReservationTime)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.TableNumber)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ReservedBy)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ReservationDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ReservationTime)
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
