@@ -36,19 +36,45 @@ namespace LordOfTheWings.DAL.Context
             {
                 int tnumber;
                 bool success = int.TryParse(row["TableNumber"].ToString(), out tnumber);
-
-                res.Add(new Reservation()
+                if(success)
                 {
-                    TableNumber = tnumber,
-                    ReservedBy = row["who"].ToString(),
-                    ReservationDate = row["date"].ToString().Substring(0, row["date"].ToString().IndexOf(' ')),
-                    ReservationTime = row["time"].ToString()
-                });
+                    res.Add(new Reservation()
+                    {
+                        TableNumber = tnumber,
+                        ReservedBy = row["who"].ToString(),
+                        ReservationDate = row["date"].ToString().Substring(0, row["date"].ToString().IndexOf(' ')),
+                        ReservationTime = row["time"].ToString()
+                    });
+                }
+
+                
             }
 
             return res;
         }
 
-        
+        public List<Order> getAllOrders()
+        {
+            string query = @"";
+            var result = client.ExecuteQuery(query, parameters: null);
+
+            List<Order> res = new List<Order>();
+
+            foreach(var row in result)
+            {
+                int tnumber;
+                bool success = int.TryParse(row["TableNumber"].ToString(), out tnumber);
+
+
+                if (success)
+                {
+                    res.Add(new Order()
+                    {
+                        tableNumber = tnumber
+                    });
+                }
+            }
+            return null;
+        }
     }
 }
