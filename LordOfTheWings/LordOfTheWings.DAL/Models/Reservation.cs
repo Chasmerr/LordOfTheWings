@@ -8,6 +8,7 @@ namespace LordOfTheWings.DAL.Models
     public class Reservation
     {
         [Display(Name = "Table Number")]
+        [Range(1, 22)]
         public int TableNumber { get; set; }
         [Display(Name = "Reserved by")]
         public string ReservedBy { get; set; }
