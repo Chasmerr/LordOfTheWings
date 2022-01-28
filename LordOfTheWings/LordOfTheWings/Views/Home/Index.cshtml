@@ -1,8 +1,130 @@
-﻿@{
+﻿@model IEnumerable<LordOfTheWings.DAL.Models.DishPopularityChartItem>
+@{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<html>
+<head>
+    <style type="text/css">
+        .inline {
+            margin: 0px;
+            display: inline-block;
+        }
+
+        .body-container {
+            padding-left: 30px !important;
+            padding-right: 30px !important;
+            max-width: 100%;
+        }
+    </style>
+    <!--Load the AJAX API-->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+
+        google.charts.load('current', { 'packages': ['corechart', 'line'] });
+
+        google.charts.setOnLoadCallback(drawDishPopularityChart);
+        google.charts.setOnLoadCallback(drawTablePopularityChart);
+        google.charts.setOnLoadCallback(drawOpinionChart);
+        google.charts.setOnLoadCallback(drawHourPopularityChart);
+
+        function drawDishPopularityChart() {
+
+            var jsonData = $.ajax({
+                url: '/Home/GetDishPopularityPieChartJSON',
+                dataType: 'json',
+                async: false
+            }).responseText;
+
+            var data = new google.visualization.DataTable(jsonData);
+
+            var options = {
+                'title': 'Popularność dań',
+                'width': 600,
+                'height': 450
+            };
+
+            var chart = new google.visualization.PieChart(document.getElementById('DishPopularityChart'));
+            chart.draw(data, options);
+        }
+
+        function drawTablePopularityChart() {
+
+            var jsonData = $.ajax({
+                url: '/Home/GetTablePopularityPieChartJSON',
+                dataType: 'json',
+                async: false
+            }).responseText;
+
+            var data = new google.visualization.DataTable(jsonData);
+
+            var options = {
+                'title': 'Popularność stolików',
+                'width': 600,
+                'height': 450
+            };
+
+            var chart = new google.visualization.PieChart(document.getElementById('TablePopularityChart'));
+            chart.draw(data, options);
+        }
+
+        function drawOpinionChart() {
+
+            var jsonData = $.ajax({
+                url: '/Home/GetOpinionChartJSON',
+                dataType: 'json',
+                async: false
+            }).responseText;
+
+            var data = new google.visualization.DataTable(jsonData);
+
+            var options = {
+                'title': 'Rozkład opinii',
+                'width': 600,
+                'height': 450
+            };
+
+            var chart = new google.visualization.PieChart(document.getElementById('OpinionChart'));
+            chart.draw(data, options);
+        }
+
+        function drawHourPopularityChart() {
+
+            var jsonData = $.ajax({
+                url: '/Home/GetHourPopularityChartJSON',
+                dataType: 'json',
+                async: false
+            }).responseText;
+
+            var data = new google.visualization.DataTable(jsonData);
+
+            var options = {
+                'title': 'Popularność konkretnych godzin',
+                'subtitle': 'bazowana na ilości zamówień',
+                'width': 1500,
+                'height': 300,
+                'curveType': 'function',
+                'hAxis': {
+                    'title': 'Godzina'
+                },
+                'vAxis': {
+                    'title': 'Ilość'
+                }
+            };
+
+            var chart = new google.visualization.LineChart(document.getElementById('HourPopularityChart'));
+            chart.draw(data, options);
+        }
+    </script>
+</head>
+<body>
+    <div align="center">
+        <div class="inline"><div id="DishPopularityChart"></div></div>
+        <div class="inline"><div id="TablePopularityChart"></div></div>
+        <div class="inline"><div id="OpinionChart"></div></div>
+    </div>
+    <div align="center" id="HourPopularityChart"></div>
+</body>
+</html>
+
+

@@ -49,8 +49,31 @@ namespace LordOfTheWings.DAL.Context
                         ReservationTime = row["time"].ToString()
                     });
                 }
+            }
 
-                
+            return res;
+        }
+
+        public List<Opinion> GetAllOpinions()
+        {
+            string query = @"select * from arc3-339316.opinions.opinion";
+            var result = bqClient.ExecuteQuery(query, parameters: null);
+
+            List<Opinion> res = new List<Opinion>();
+
+            foreach (var row in result)
+            {
+                float pos;
+                bool success = float.TryParse(row["positivity"].ToString(), out pos);
+                if (success)
+                {
+                    res.Add(new Opinion()
+                    {
+                        content = row["content"].ToString(),
+                        date = row["date"].ToString(),
+                        positivity = pos
+                    });
+                }
             }
 
             return res;
@@ -80,32 +103,138 @@ namespace LordOfTheWings.DAL.Context
 
         public void MakeReservation(Reservation reservation)
         {
-            string query = "insert into arc3-339316.reservations.reservation(date, time, who, TableNumber) values('" + reservation.ReservationDate + "','" + reservation.ReservationTime + ":00','" + reservation.ReservedBy + "'," + reservation.TableNumber + ")";
-            bqClient.ExecuteQuery(query, parameters: null);
+            string query = "insert into arc3-339316.reservations.reservation(date, time, who, TableNumber) values(@ReservationDate, @ReservationTime, @ReservedBy, @TableNumber)";
+            var parameters = new BigQueryParameter[]
+            {
+                new BigQueryParameter("ReservationDate", BigQueryDbType.Date, reservation.ReservationDate),
+                new BigQueryParameter("ReservationTime", BigQueryDbType.Time, reservation.ReservationTime + ":00"),
+                new BigQueryParameter("ReservedBy", BigQueryDbType.String, reservation.ReservedBy),
+                new BigQueryParameter("TableNumber", BigQueryDbType.Int64, reservation.TableNumber)
+            };
+            bqClient.ExecuteQuery(query, parameters);
         }
 
-        //public List<Order> getAllOrders()
-        //{
-        //    string query = @"";
-        //    var result = bqClient.ExecuteQuery(query, parameters: null);
+        public List<DishPopularityChartItem> GetOrderedDishesWithCount()
+        {
+            string query = @"select name, count(name) as count from `arc3-339316.orders.orderedDishes` as orderedDishes join `arc3-339316.dishes.mycollections` as dishes on orderedDishes.DishId = dishes.id group by name";
+            var result = bqClient.ExecuteQuery(query, parameters: null);
 
-        //    List<Order> res = new List<Order>();
+            List<DishPopularityChartItem> res = new List<DishPopularityChartItem>();
 
-        //    foreach(var row in result)
-        //    {
-        //        int tnumber;
-        //        bool success = int.TryParse(row["TableNumber"].ToString(), out tnumber);
+            foreach(var row in result)
+            {
+                int count;
+                bool success = int.TryParse(row["count"].ToString(), out count);
 
+                if(success)
+                {
+                    res.Add(new DishPopularityChartItem()
+                    {
+                        DishName = row["name"].ToString(),
+                        Count = count
+                    });
+                }
+            }
 
-        //        if (success)
-        //        {
-        //            res.Add(new Order()
-        //            {
-        //                tableNumber = tnumber
-        //            });
-        //        }
-        //    }
-        //    return null;
-        //}
+            return res;
+        }
+        public List<OpinionChartItem> GetOpinionsSentimentCount()
+        {
+            string query = @"select positivity from arc3-339316.opinions.opinion";
+            var result = bqClient.ExecuteQuery(query, parameters: null);
+
+            List<OpinionChartItem> res = new List<OpinionChartItem>()
+            {
+                new OpinionChartItem()
+                {
+                    Positivity = "Positive",
+                    Count = 0,
+                },
+                new OpinionChartItem()
+                {
+                    Positivity = "Negative",
+                    Count = 0,
+                },
+                new OpinionChartItem()
+                {
+                    Positivity = "Neutral",
+                    Count = 0,
+                },
+            };
+
+            List<float> f = new List<float>();
+
+            foreach (var row in result)
+            {
+                float pos;
+                bool success = float.TryParse(row["positivity"].ToString(), out pos);
+
+                if (success)
+                {
+                    if (pos > 0.2)
+                        res.First(x => x.Positivity == "Positive").Count++;
+                    else if (pos <= 0.2 && pos >= -0.2)
+                        res.First(x => x.Positivity == "Neutral").Count++;
+                    else
+                        res.First(x => x.Positivity == "Negative").Count++;
+                }
+            }
+
+            return res;
+        }
+
+        public List<TablePopularityChartItem> GetReservedTablesWithCount()
+        {
+            string query = @"select TableNumber, count(TableNumber) as count from arc3-339316.reservations.reservation group by TableNumber";
+            var result = bqClient.ExecuteQuery(query, parameters: null);
+
+            List<TablePopularityChartItem> res = new List<TablePopularityChartItem>();
+
+            foreach (var row in result)
+            {
+                int count;
+                int tNumber;
+                bool success1 = int.TryParse(row["count"].ToString(), out count);
+                bool success2 = int.TryParse(row["TableNumber"].ToString(), out tNumber);
+
+                if (success1 && success2)
+                {
+                    res.Add(new TablePopularityChartItem()
+                    {
+                        TableNumber = tNumber,
+                        Count = count
+                    });
+                }
+            }
+
+            return res;
+        }
+
+        public List<HourPopularityChartItem> GetOrderHoursWithCount()
+        {
+            string query = @"select orderHour, count(orderHour) as count from (select extract(HOUR from OrderTime) as orderHour from orders.order) group by orderHour order by orderHour";
+            var result = bqClient.ExecuteQuery(query, parameters: null);
+
+            List<HourPopularityChartItem> res = new List<HourPopularityChartItem>();
+
+            foreach (var row in result)
+            {
+                int hour;
+                int count;
+                bool success2 = int.TryParse(row["orderHour"].ToString(), out hour);
+                bool success1 = int.TryParse(row["count"].ToString(), out count);
+
+                if (success1 && success2)
+                {
+                    res.Add(new HourPopularityChartItem()
+                    {
+                        Hour = hour,
+                        Count = count
+                    });
+                }
+            }
+
+            return res;
+        }
     }
 }

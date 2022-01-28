@@ -12,7 +12,8 @@ namespace LordOfTheWings.Controllers
     {
         public IActionResult Index()
         {
-            return View();
+            var vm = Context.context.GetAllOpinions();
+            return View(vm);
         }
 
         [HttpGet]
